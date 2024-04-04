@@ -15,10 +15,13 @@ export const useGetCallById = (id: string | string[]) => {
                     id
                 }
             })
+            console.log(id, calls);
+
             if (calls.length > 0) setCall(calls[0])
 
             setIsCallLoading(false)
         }
+
         loadCall()
     }, [client, id])
 

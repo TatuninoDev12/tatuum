@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 import { useGetCalls } from '@/hook/useGetCalls'
 import { Call, CallRecording } from '@stream-io/video-react-sdk'
@@ -45,15 +44,11 @@ const CallList = ({ type }: { type: 'ended' | 'upcoming' | 'recordings' }) => {
 
     useEffect(() => {
         const fetchRecordings = async () => {
-            try {
-                const callData = await Promise.all(callRecordings?.map((meeting) => meeting.queryRecordings()) ?? [])
+            const callData = await Promise.all(callRecordings?.map((meeting) => meeting.queryRecordings()) ?? [],)
 
-                const recordings = callData.filter(call => call.recordings.length > 0).flatMap(call => call.recordings)
+            const recordings = callData.filter((call) => call.recordings.length > 0).flatMap((call) => call.recordings)
 
-                setRecordings(recordings)
-            } catch (error) {
-                toast({ title: 'Try again later!' })
-            }
+            setRecordings(recordings)
         }
         if (type === 'recordings') fetchRecordings()
     }, [type, callRecordings])
@@ -66,7 +61,7 @@ const CallList = ({ type }: { type: 'ended' | 'upcoming' | 'recordings' }) => {
     return (
         <div className='grid grid-cols-1 gap-5 xl:grid-cols-2'>
             {
-                calls && calls.length > 0 ? calls.map((meeting: Call | CallRecording) => (
+                calls && calls.length > 0 ? (calls.map((meeting: Call | CallRecording) => (
                     <MeetingCard
                         key={(meeting as Call).id}
                         icon={
@@ -76,16 +71,17 @@ const CallList = ({ type }: { type: 'ended' | 'upcoming' | 'recordings' }) => {
                                     ? '/icons/upcoming.svg'
                                     : '/icons/recordings.svg'
                         }
-                        title={meeting.state?.custom?.description?.substring(0, 20) || meeting.filename?.substring(0, 20) || 'Personal Meeting'}
-                        date={meeting.state?.startsAt?.toLocaleString() || meeting.start_time?.toLocaleString()}
+                        title={(meeting as Call).state?.custom?.description?.substring(0, 20) || (meeting as CallRecording).filename?.substring(0, 20) || 'Personal Meeting'}
+                        date={(meeting as Call).state?.startsAt?.toLocaleString() || (meeting as CallRecording).start_time?.toLocaleString()}
                         isPreviousMeeting={type === 'ended'}
                         buttonIcon1={type === 'recordings' ? '/icons/play.svg' : undefined}
                         buttonText={type === 'recordings' ? 'Play' : 'Start'}
-                        handleClick={type === 'recordings' ? () => router.push(`${meeting.url}`) : () => router.push(`/meeting/${meeting.id}`)}
-                        link={type === 'recordings' ? meeting.url : `${process.env.NEXT_PUBLIC_BASE_URL}/meeting/${meeting.id}`}
+                        handleClick={type === 'recordings' ? () => router.push(`${(meeting as CallRecording).url}`) : () => router.push(`/meeting/${(meeting as Call).id}`)}
+                        link={type === 'recordings' ? (meeting as CallRecording).url : `${process.env.NEXT_PUBLIC_BASE_URL}/meeting/${(meeting as Call).id}`}
                     />
-                )) : (
-                    <h1>{noCallsMessage}</h1>
+                ))
+                ) : (
+                    <h1 className="text-2xl font-bold text-white">{noCallsMessage}</h1>
                 )
             }
         </div>

@@ -1,11 +1,9 @@
 'use client'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/use-toast'
-import { useGetCallById } from '@/hook/useGetCallById'
+import { useCreateCall } from '@/hook/useCreateCall'
 import { useUser } from '@clerk/nextjs'
-import { useStreamVideoClient } from '@stream-io/video-react-sdk'
 import { useRouter } from 'next/navigation'
-import React from 'react'
 
 const Table = ({ title, description }: { title: string, description: string }) => (
     <div className='flex flex-col items-start gap-2 xl:flex-row'>
@@ -19,26 +17,12 @@ const PersonalRoom = () => {
     const { user } = useUser()
     const { toast } = useToast()
     const router = useRouter()
-    const client = useStreamVideoClient()
-    const meetingId = user?.id
-    const meetingLink = `${process.env.NEXT_PUBLIC_BASE_URL}/meeting/${meetingId}?personal=true`
-    const { call } = useGetCallById(meetingId!)
+    const startAt = new Date(Date.now())
+    const { meetingLink, id } = useCreateCall({ personal: false, date: startAt })
 
     const startRoom = async () => {
-
-        if (!client || !user) return
-
-        if (!call) {
-            const newCall = client.call('default', meetingId!)
-            await newCall.getOrCreate({
-                data: {
-                    starts_at: new Date().toISOString(),
-                }
-            })
-        }
-        router.push(`/meeting/${meetingId}?personal=true`)
+        router.push(meetingLink)
     }
-
     return (
         <section className='flex size-full flex-col gap-10 text-white'>
             <h1 className='text-3xl font-bold'>
@@ -46,7 +30,7 @@ const PersonalRoom = () => {
             </h1>
             <div className='flex w-full flex-col gap-8 xl:max-w-[900px]'>
                 <Table title='Topic' description={`${user?.username}'s meeting room`} />
-                <Table title='Meeting ID' description={meetingId!} />
+                <Table title='Meeting ID' description={id!} />
                 <Table title='Invite Link' description={meetingLink} />
             </div>
 

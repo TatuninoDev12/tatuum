@@ -8,6 +8,7 @@ const MeetingSetup = ({ setIsSetupcomplet }: { setIsSetupcomplet: (value: boolea
     const call = useCall()
 
     if (!call) {
+
         throw new Error('useCall must be used inside StreamCall component')
     }
 

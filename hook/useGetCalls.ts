@@ -8,6 +8,7 @@ export const useGetCalls = () => {
     const client = useStreamVideoClient()
     const { user } = useUser()
 
+
     useEffect(() => {
         const loadCalls = async () => {
             if (!client || !user?.id) return
@@ -20,15 +21,20 @@ export const useGetCalls = () => {
                     filter_conditions: {
                         starts_at: { $exists: true },
                         $or: [
-                            {
-                                created_by_user_id: user.id
-                            },
+
                             {
                                 members: { $in: [user.id] }
+                            },
+                            {
+                                participants: { $in: [user.id] }
                             }
+                            // {
+                            //     created_by_user_id: user.id
+                            // }
                         ]
                     }
                 })
+
                 setCalls(calls)
             } catch (error) {
                 console.log(error);
@@ -42,9 +48,12 @@ export const useGetCalls = () => {
 
     const now = new Date()
 
+
+
     const endedCalls = calls?.filter(({ state: { startsAt, endedAt } }: Call) => {
         return (startsAt && new Date(startsAt) < now) || !!endedAt
     })
+
     const upcomingCalls = calls?.filter(({ state: { startsAt } }: Call) => {
         return startsAt && new Date(startsAt) > now
     })

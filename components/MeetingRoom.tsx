@@ -1,6 +1,8 @@
+
+'use client'
 import { cn } from '@/lib/utils'
-import { CallControls, CallParticipantsList, CallStatsButton, CallingState, PaginatedGridLayout, SpeakerLayout, useCallStateHooks } from '@stream-io/video-react-sdk'
-import React, { use, useState } from 'react'
+import { CallControls, CallParticipantsList, CallStatsButton, CallingState, PaginatedGridLayout, SpeakerLayout, useCallStateHooks, useCall, name } from '@stream-io/video-react-sdk'
+import React, { useEffect, useState } from 'react'
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -12,18 +14,64 @@ import { LayoutList, Users } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import EndCallButton from './EndCallButton'
 import Loader from './Loader'
+import { useUser } from '@clerk/nextjs'
 
 type CallLayoutType = 'grid' | 'speaker-left' | 'speaker-right'
 
+const mem: string[] = []
+let countParticipants = 0
 const MeetingRoom = () => {
     const searchParams = useSearchParams()
     const [layout, setLayout] = useState<CallLayoutType>('speaker-left')
     const [showParticipantes, setshowParticipantes] = useState(false)
     const isPersonalRoom = !!searchParams.get('personal')
     const router = useRouter()
+    const { user } = useUser()
+
+    const { useParticipants, } = useCallStateHooks();
+    const participants = useParticipants({ sortBy: name });
+
+    const call = useCall()
+
+
+    useEffect(() => {
+        const update = async () => {
+
+            if (!call) return
+
+            const members = call.state.members.map((member) => {
+                return member.user_id
+            })
+
+            members?.map((member) => {
+                participants.map((participant) => {
+                    if (participant.userId !== user?.id && mem.indexOf(member) === -1) {
+
+                        mem.push(participant.userId)
+                        countParticipants++
+                    }
+                })
+
+            })
+
+
+            if (mem.length === countParticipants && countParticipants > 0) {
+                call.updateCallMembers({
+                    update_members: mem.map((participant) => {
+                        return { user_id: participant }
+                    })
+                })
+                countParticipants = 0
+            }
+        }
+
+        update()
+
+    }, [participants, call?.state.members, user?.id, call])
 
     const { useCallCallingState } = useCallStateHooks()
     const callingState = useCallCallingState()
+
 
     if (callingState !== CallingState.JOINED) return <Loader />
 
@@ -76,11 +124,12 @@ const MeetingRoom = () => {
                 </DropdownMenu>
                 <CallStatsButton />
                 <button onClick={() => setshowParticipantes((prev) => !prev)}>
-                    <div className='cursor-pointer rounded-2xl bg-[#19232d] px-4 py-2 hover:bg-[#4c535b'>
+                    <div className='cursor-pointer rounded-2xl bg-[#19232d] px-4 py-2 hover:bg-[#4c535b]'>
                         <Users size={20} className='text-white' />
                     </div>
                 </button>
-                {!isPersonalRoom && <EndCallButton />}
+                {/* {!isPersonalRoom && <EndCallButton />} */}
+                <EndCallButton />
             </div>
         </section>
     )
