@@ -41,7 +41,6 @@ export const useCreateCall = ({ personal = false, description = '', date }: Crea
         }
         loadCalls()
     }, [client, user?.id])
-    // console.log(newCall, meetingLink, id);
 
     return {
         meetingLink,
